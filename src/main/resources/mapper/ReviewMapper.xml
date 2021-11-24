@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.ReviewMapper">
+	<resultMap type="com.itwill.littlecinema.domain.Review" id="reviewWithMember">
+		<id property="reviewNo" column="reviewNo" />
+		<result property="score" column="score" />
+		<result property="reviewComment" column="reviewComment" />
+		<association property="member" javaType="com.itwill.littlecinema.domain.Member">
+			<id property="id" column="id" />
+			<result property="password" column="password" />
+			<result property="name" column="name" />
+			<result property="phone" column="phone" />
+			<result property="birth_date" column="birth_date" />
+		</association>
+		<association property="movie" javaType="com.itwill.littlecinema.domain.Movie">
+			<id property="movieNo" column="movieNo" />
+		</association>
+	</resultMap>
+	
+	<resultMap type="com.itwill.littlecinema.domain.Review" id="reviewWithMovie">
+		<id property="reviewNo" column="reviewNo" />
+		<result property="score" column="score" />
+		<result property="reviewComment" column="reviewComment" />
+		<association property="movie" javaType="com.itwill.littlecinema.domain.Movie">
+			<id property="movieNo" column="id" />
+			<result property="movieNo" column="movieNo" />
+			<result property="title" column="title" />
+			<result property="openDate" column="openDate" />
+			<result property="director" column="director" />
+			<result property="actors" column="actors" />
+			<result property="genre" column="genre" />
+			<result property="runningtime" column="runningtime" />
+			<result property="summary" column="summary" />
+			<result property="rating" column="rating" />
+			<result property="posterImage" column="posterImage" />
+		</association>
+	</resultMap>
+
+	<insert id="insert" parameterType="com.itwill.littlecinema.domain.Review">
+		<selectKey keyProperty="reviewNo" resultType="int" order="BEFORE">
+			SELECT REVIEW_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO REVIEW(REVIEW_NO, ID, MOVIE_NO, SCORE, REVIEW_COMMENT) 
+		VALUES(#{reviewNo}, #{member.id}, #{movie.movieNo}, #{score}, #{reviewComment})
+	</insert>
+	
+	<update id="update" parameterType="com.itwill.littlecinema.domain.Review">
+		UPDATE REVIEW 
+		SET SCORE = #{score}, REVIEW_COMMENT = #{reviewComment}
+		WHERE REVIEW_NO = #{reviewNo}
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		DELETE FROM REVIEW 
+		WHERE REVIEW_NO = #{reviewNo}
+	</delete>
+	
+	<select id="selectByNo" parameterType="int" resultMap="reviewWithMember">
+		SELECT REVIEW_NO as reviewNo,
+		       R.ID,
+		       NAME,
+		       PHONE,
+		       BIRTH_DATE,
+		       MOVIE_NO as movieNo,
+		       SCORE,
+		       REVIEW_COMMENT as reviewComment
+		FROM REVIEW R JOIN MEMBER M on M.ID = R.ID
+		WHERE REVIEW_NO = #{reviewNo}
+	</select>
+	
+	<!-- 
+ 	박나래
+ 	MovieInfoController
+ 	movieNo으로 영화 상영시간 조회
+ 	-->
+	<select id="selectAvgScore" parameterType="int" resultType="double">
+		SELECT AVG(SCORE) FROM REVIEW WHERE MOVIE_NO = #{movieNo}
+	</select>
+	
+	<select id="selectByMovie" parameterType="int" resultType="com.itwill.littlecinema.domain.Review">
+		SELECT * FROM REVIEW WHERE MOVIE_NO = #{movieNo}
+	</select>
+	
+		
+	<!-- 
+ 	이승현
+	MemberController
+	회원정보에서 아이디로 내가 쓴 리뷰내용 조회
+ 	-->
+	<select id="selectById" parameterType="string" resultMap="reviewWithMovie">
+	   SELECT REVIEW_NO as reviewNo,
+       SCORE,
+       REVIEW_COMMENT as reviewComment,
+       TITLE,
+       M.MOVIE_NO as movieNo
+	   FROM REVIEW R JOIN MOVIE M ON M.MOVIE_NO = R.MOVIE_NO
+	   WHERE ID = #{id}
+	</select>
+</mapper>

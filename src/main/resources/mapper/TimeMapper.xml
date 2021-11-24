@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.TimeMapper">
+	<resultMap type="com.itwill.littlecinema.domain.Time" id="time">
+		<id property="timeCode" column="time_Code" />
+		<result property="startTime" column="start_Time" />
+		<result property="endTime" column="end_Time" />
+		<result property="movieDate" column="movie_Date" />
+		<association property="movie" javaType="com.itwill.littlecinema.domain.Movie">
+			<result property="movieNo" column="movie_No" />
+			<result property="title" column="title" />
+			<result property="rating" column="rating"/>
+			<result property="posterImage" column="poster_Image" />
+			<result property="openDate" column="openDate" />
+			<result property="genre" column="genre" />
+			<result property="runningtime" column="runningtime" />
+			<result property="summary" column="summary" />
+
+		</association>
+		<association property="screen" javaType="com.itwill.littlecinema.domain.Screen">
+			<result property="screenNo" column="screen_No" />
+			<result property="screenName" column="screen_Name" />
+		</association>
+	</resultMap>
+	
+	<!-- 
+ 	박나래
+ 	MovieTimeTableController
+ 	영화 상영일자 조회
+ 	-->
+	<select id="selectAllDate" resultType="date">
+		SELECT DISTINCT MOVIE_DATE 
+		FROM TIME 
+		ORDER BY MOVIE_DATE
+	</select>
+	
+	<!-- 
+ 	박나래
+ 	MovieInfoController
+ 	movieNo으로 영화 상영일자(중복제거) 조회
+ 	-->
+	<select id="selectDateByNo" resultType="date" parameterType="int">
+		SELECT DISTINCT MOVIE_DATE 
+		FROM TIME 
+		WHERE MOVIE_NO = #{movieNo} 
+		ORDER BY MOVIE_DATE
+	</select>
+	
+	<!-- 
+ 	박나래
+ 	MovieInfoController
+ 	movieNo으로 영화 상영시간 조회
+ 	-->
+	<select id="selectTimeByNo" resultMap="time" parameterType="int">
+		SELECT *
+		FROM TIME
+		WHERE MOVIE_NO = #{movieNo}
+	</select>
+	
+	<!-- 
+ 	박나래
+ 	MovieTimeTableController
+ 	영화 상영일자 조회
+ 	-->
+	<select id="selectScreenTimeByDate" resultMap="time" parameterType="string">
+		SELECT TIME_CODE,
+		       START_TIME,
+		       END_TIME,
+		       MOVIE_DATE,
+		       M.MOVIE_NO,
+		       TITLE,
+		       RATING,
+		       POSTER_IMAGE,
+		       SUMMARY,
+		       GENRE,
+		       RUNNINGTIME,
+		       S.SCREEN_NO,
+		       SCREEN_NAME
+		FROM TIME T join MOVIE M on t.MOVIE_NO = M.MOVIE_NO
+		    join SCREEN S on T.SCREEN_NO = S.SCREEN_NO
+		WHERE MOVIE_DATE = #{movieDate} ORDER BY TIME_CODE
+	</select>
+	
+	<!-- 
+	author: 유재협
+	영화 한개의 날짜를 이용해 상영 시간들을 가져오기 위한 쿼리
+	 -->
+	<select id="selectScreenTimeByNoDate" resultMap="time" parameterType="map">
+		SELECT TIME_CODE, START_TIME, END_TIME, MOVIE_DATE,
+		       M.MOVIE_NO, TITLE, RATING, POSTER_IMAGE,
+		       S.SCREEN_NO, SCREEN_NAME
+		FROM TIME   T
+		JOIN MOVIE  M
+		     ON T.MOVIE_NO = M.MOVIE_NO
+		JOIN SCREEN S
+		     ON T.SCREEN_NO = S.SCREEN_NO
+		WHERE MOVIE_DATE = #{movieDate}
+		  AND M.MOVIE_NO = #{movieNo}
+	</select>
+	
+	<!-- 유재협: attribute(속성) 정렬 주의 바랍니다 -->
+	<!-- 영화번호, 상영날짜로 타임테이블 조회 -->
+	<select id="selectTimeTableByNoDate" parameterType="map" resultMap="time">
+		SELECT TIME_CODE, S.SCREEN_NAME, START_TIME, END_TIME
+		FROM TIME
+		INNER JOIN SCREEN S
+		           ON TIME.SCREEN_NO = S.SCREEN_NO
+		WHERE MOVIE_DATE = #{movieDate}
+		  AND MOVIE_NO = #{movieNo}
+		ORDER BY S.SCREEN_NAME, START_TIME
+	</select>
+	
+	<!-- 상영날짜로 영화별 타임테이블 조회 -->
+	<select id="">
+		SELECT M.TITLE, M.POSTER_IMAGE, M.RATING, s.SCREEN_NAME, START_TIME
+		FROM TIME
+		         INNER JOIN SCREEN S ON TIME.SCREEN_NO = S.SCREEN_NO
+		         join MOVIE M on M.MOVIE_NO = TIME.MOVIE_NO
+		WHERE MOVIE_DATE = #{movieDate}
+	</select>
+	
+	<select id="selectTimeByTimeCode" parameterType="int" resultMap="time">
+		SELECT *
+		FROM TIME
+		         JOIN MOVIE M ON M.MOVIE_NO = TIME.MOVIE_NO
+                 JOIN SCREEN S on TIME.SCREEN_NO = S.SCREEN_NO
+		WHERE TIME_CODE = #{timeCode}
+	</select>
+</mapper>
